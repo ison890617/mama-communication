@@ -1,499 +1,1352 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-
-<title>媽媽溝通</title>
+<title>媽媽溝通程式｜手寫預覽</title>
 
 <style>
-* {
-    box-sizing: border-box;
-    -webkit-tap-highlight-color: transparent;
+*{box-sizing:border-box}
+
+html,body{
+  margin:0;
+  width:100%;
+  height:100%;
+  font-family:-apple-system,BlinkMacSystemFont,"Noto Sans TC",sans-serif;
+  background:#f7f7f7;
+  color:#222
 }
 
-html, body {
-    margin: 0;
-    min-height: 100%;
-    font-family: -apple-system, BlinkMacSystemFont, "Noto Sans TC",
-                 "Microsoft JhengHei", sans-serif;
-    background: #f5f5f5;
-    color: #222;
+body{overflow:hidden}
+
+button{
+  font-family:inherit;
+  cursor:pointer
 }
 
-body {
-    min-height: 100vh;
+#app{
+  height:100dvh;
+  display:flex;
+  flex-direction:column
 }
 
-.app {
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
+/* ===== 上方組句區 ===== */
+.sentence{
+  position:sticky;
+  top:0;
+  z-index:100;
+  flex:0 0 auto;
+  background:white;
+  border-bottom:2px solid #ddd;
+  padding:12px;
+  min-height:105px;
+  display:flex;
+  flex-direction:column;
+  gap:8px
 }
 
-/* 最上方標題 */
-header {
-    height: 72px;
-    background: #ffffff;
-    border-bottom: 1px solid #ddd;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 28px;
-    font-weight: 700;
-    position: sticky;
-    top: 0;
-    z-index: 10;
+.sentence-text{
+  min-height:45px;
+  font-size:27px;
+  font-weight:700;
+  line-height:1.35;
+  overflow:auto;
+  padding:3px 5px
 }
 
-.screen {
-    flex: 1;
-    padding: 18px 16px 28px;
-    display: flex;
-    flex-direction: column;
+.controls{
+  display:flex;
+  gap:8px
 }
 
-/* 上方返回列 */
-.topbar {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 22px;
-    min-height: 68px;
+.controls button{
+  flex:1;
+  min-height:48px;
+  border:0;
+  border-radius:12px;
+  background:#e9e9e9;
+  font-size:20px;
+  font-weight:700
 }
 
-/* 返回按鈕 */
-.back-btn {
-    width: 135px;
-    min-height: 66px;
-    border: none;
-    border-radius: 18px;
-    background: #dedede;
-    box-shadow: 0 2px 7px rgba(0,0,0,0.12);
-    font-size: 25px;
-    font-weight: 700;
-    touch-action: manipulation;
+/* ===== 內容區 ===== */
+.content{
+  flex:1;
+  overflow:auto;
+  padding:18px
 }
 
-/* 頁面標題 */
-.page-title {
-    flex: 1;
-    text-align: center;
-    font-size: 28px;
-    font-weight: 700;
-    margin-right: 135px;
+.page{
+  display:none
 }
 
-.home-title {
-    text-align: center;
-    font-size: 28px;
-    font-weight: 700;
-    margin: 10px 0 28px;
+.page.active{
+  display:block
 }
 
-.buttons {
-    display: flex;
-    flex-direction: column;
-    gap: 18px;
-    width: 100%;
-    max-width: 600px;
-    margin: 0 auto;
+/* ===== 上方返回列 ===== */
+.topbar{
+  position:sticky;
+  top:0;
+  z-index:5;
+  background:#f7f7f7;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding-bottom:14px
 }
 
-/* 大按鈕 */
-button.option {
-    width: 100%;
-    min-height: 105px;
-    border: none;
-    border-radius: 22px;
-    background: #ffffff;
-    box-shadow: 0 3px 10px rgba(0,0,0,0.12);
-    font-size: 31px;
-    font-weight: 700;
-    color: #222;
-    cursor: pointer;
-    touch-action: manipulation;
+.topbar button{
+  min-width:110px;
+  min-height:58px;
+  border:0;
+  border-radius:14px;
+  background:#222;
+  color:#fff;
+  font-size:25px;
+  font-weight:700
 }
 
-button:active {
-    transform: scale(0.97);
-    filter: brightness(0.96);
+.page-title{
+  font-size:29px;
+  font-weight:800
 }
 
-/* 首頁三個分類 */
-.home-btn {
-    background: #fff3d6 !important;
+/* ===== 正方形選項 ===== */
+.grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:14px
 }
 
-.hospital-btn {
-    background: #e3f2ff !important;
+.card{
+  aspect-ratio:1 / 1;
+  width:100%;
+  min-height:0;
+  border:2px solid #bbb;
+  border-radius:18px;
+  background:white;
+  font-size:clamp(26px,5vw,38px);
+  font-weight:800;
+  padding:16px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center
 }
 
-.me-btn {
-    background: #e8f7e8 !important;
+/* ===== 詞語選項 ===== */
+.phrase{
+  aspect-ratio:1 / 1;
+  width:100%;
+  min-height:0;
+  margin-bottom:12px;
+  border:2px solid #bbb;
+  border-radius:16px;
+  background:white;
+  font-size:clamp(26px,5vw,38px);
+  font-weight:700;
+  text-align:center;
+  padding:14px;
+  display:flex;
+  align-items:center;
+  justify-content:center
 }
 
-/* 顯示句子 */
-.message-box {
-    margin: 20px auto;
-    width: 100%;
-    max-width: 600px;
-    background: #ffffff;
-    border-radius: 22px;
-    padding: 32px 20px;
-    text-align: center;
-    box-shadow: 0 3px 10px rgba(0,0,0,0.12);
+.section-label{
+  font-size:22px;
+  font-weight:800;
+  margin:4px 0 12px
 }
 
-.message {
-    font-size: 40px;
-    font-weight: 700;
-    line-height: 1.5;
+.card:active,
+.phrase:active,
+.controls button:active,
+.topbar button:active{
+  transform:scale(.98)
 }
 
-/* 語音按鈕 */
-.speak-btn {
-    margin-top: 25px !important;
-    background: #222222 !important;
-    color: #ffffff !important;
+/* ===== 手寫 ===== */
+.handwriting-wrap{
+  width:100%;
+  padding:4px 0 20px
 }
 
-@media (max-width: 430px) {
+#handwritingCanvas{
+  display:block;
+  width:100%;
+  height:60vh;
+  min-height:420px;
+  background:#fff;
+  border:3px solid #333;
+  border-radius:16px;
+  touch-action:none;
+  box-sizing:border-box
+}
 
-    header {
-        height: 64px;
-        font-size: 25px;
-    }
+.handwriting-buttons{
+  margin-top:16px
+}
 
-    .screen {
-        padding: 16px 14px 24px;
-    }
+.handwriting-buttons button{
+  width:100%;
+  min-height:70px;
+  font-size:28px;
+  font-weight:800;
+  border:0;
+  border-radius:16px;
+  background:#e9e9e9
+}
 
-    .topbar {
-        gap: 8px;
-        margin-bottom: 18px;
-    }
+.note{
+  font-size:19px;
+  color:#555;
+  margin:0 0 12px
+}
 
-    .back-btn {
-        width: 125px;
-        min-height: 62px;
-        font-size: 23px;
-    }
+/* ===== 手機版 ===== */
+@media(max-width:500px){
 
-    .page-title {
-        font-size: 25px;
-        margin-right: 125px;
-    }
+  .grid{
+    grid-template-columns:1fr 1fr;
+    gap:12px
+  }
 
-    button.option {
-        min-height: 95px;
-        font-size: 29px;
-    }
+  .card{
+    font-size:28px;
+    padding:10px
+  }
 
-    .home-title {
-        font-size: 26px;
-    }
+  .phrase{
+    font-size:28px;
+    padding:10px
+  }
 
-    .message {
-        font-size: 36px;
-    }
+  .sentence-text{
+    font-size:25px
+  }
+
+  .topbar button{
+    min-width:100px;
+    font-size:23px
+  }
+
+  .page-title{
+    font-size:27px
+  }
+}
+
+/* ===== 選項按鈕強制正方形 ===== */
+.options-grid button,
+.option-btn,
+.choice-btn,
+.category-btn{
+  aspect-ratio:1 / 1 !important;
+  width:100% !important;
+  min-height:0 !important;
+  font-size:clamp(24px,5vw,38px) !important;
+  font-weight:700 !important;
+  padding:12px !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  text-align:center !important
+}
+
+.options-grid{
+  grid-auto-rows:1fr
+}
+
+@media(max-width:600px){
+  .options-grid{
+    gap:12px !important
+  }
 }
 </style>
 </head>
 
 <body>
 
-<div class="app">
+<div id="app">
 
-    <header>
-        媽媽溝通
-    </header>
+  <!-- ===== 上方組句區 ===== -->
+  <div class="sentence">
 
-    <main class="screen" id="app"></main>
+    <div id="sentenceText" class="sentence-text">
+      🗣️ 目前還沒有選擇
+    </div>
+
+    <div class="controls">
+
+      <button onclick="speakSentence()">
+        🔊 唸出來
+      </button>
+
+      <button onclick="undo()">
+        ↩️ 上一步
+      </button>
+
+      <button onclick="clearSentence()">
+        🗑️ 清除
+      </button>
+
+    </div>
+
+  </div>
+
+  <main id="content" class="content"></main>
 
 </div>
 
+
 <script>
 
-const app = document.getElementById("app");
+/* =========================================================
+   組句資料
+========================================================= */
 
+let selected = [];
 let currentPage = "home";
+let pageStack = [];
 
 
-/* -------------------------
-   上方返回列
-------------------------- */
+/* =========================================================
+   首頁與主要分類
+========================================================= */
 
-function topbar(title) {
+const pages = {
 
-    return `
+  home:{
+    title:"首頁",
+
+    cards:[
+      ["🏠 家裡","family"],
+      ["🏥 醫院","hospital"],
+      ["🙋 我","me"],
+      ["✍️ 手寫","handwriting"],
+      ["💬 我不知道怎麼說","compose"]
+    ]
+  },
+
+
+  family:{
+    title:"家裡",
+
+    cards:[
+      ["小焐","person:xiaowu"],
+      ["妹妹","person:sister"],
+      ["奕仔","person:yizi"],
+      ["德翰","person:dehan"],
+      ["豆豆","person:doudou"]
+    ]
+  },
+
+
+  hospital:{
+    title:"醫院",
+
+    cards:[
+      ["問問題","hospital:questions"],
+      ["病房","hospital:room"],
+      ["身上的東西","hospital:tubes"]
+    ]
+  },
+
+
+  me:{
+    title:"我",
+
+    cards:[
+      ["身體不舒服","me:body"],
+      ["需要幫忙","me:help"],
+      ["心情","me:mood"],
+      ["想聽音樂","phrase:想聽音樂"],
+      ["想聽節目","phrase:想聽節目"],
+      ["想換墊子","phrase:想換墊子"]
+    ]
+  },
+
+
+  compose:{
+    title:"我不知道怎麼說",
+
+    cards:[
+      ["誰","compose:who"],
+      ["想法","compose:thought"],
+      ["事情","compose:action"],
+      ["內容","compose:content"]
+    ]
+  }
+
+};
+
+
+/* =========================================================
+   各層選項
+========================================================= */
+
+const lists = {
+
+
+  /* ---------- 家裡 ---------- */
+
+  "person:xiaowu":{
+    title:"小焐",
+
+    cards:[
+      ["問問題","xiaowu:ask"],
+      ["告訴他","xiaowu:tell"]
+    ]
+  },
+
+
+  "person:sister":{
+    title:"妹妹",
+
+    cards:[
+      ["問問題","sister:ask"],
+      ["告訴他","sister:tell"]
+    ]
+  },
+
+
+  "person:yizi":{
+    title:"奕仔",
+
+    cards:[
+      ["問問題","yizi:ask"],
+      ["告訴他","yizi:tell"]
+    ]
+  },
+
+
+  "person:dehan":{
+    title:"德翰",
+
+    cards:[
+      ["問問題","dehan:ask"],
+      ["告訴他","dehan:tell"]
+    ]
+  },
+
+
+  "person:doudou":{
+    title:"豆豆",
+
+    cards:[
+      ["問問題","doudou:ask"],
+      ["告訴他","doudou:tell"]
+    ]
+  },
+
+
+  /* ---------- 小焐 ---------- */
+
+  "xiaowu:ask":{
+    title:"小焐｜問問題",
+
+    phrases:[
+      "工作",
+      "什麼時候來",
+      "在哪裡",
+      "現在在做什麼",
+      "可以幫我嗎",
+      "其他"
+    ]
+  },
+
+
+  "xiaowu:tell":{
+    title:"小焐｜告訴他",
+
+    phrases:[
+      "我想你",
+      "我很好",
+      "我不舒服",
+      "我想跟你說話",
+      "妹妹學校的事",
+      "其他"
+    ]
+  },
+
+
+  /* ---------- 妹妹 ---------- */
+
+  "sister:ask":{
+    title:"妹妹｜問問題",
+
+    phrases:[
+      "最近好嗎",
+      "什麼時候來",
+      "學校怎麼樣",
+      "可以幫我嗎",
+      "其他"
+    ]
+  },
+
+
+  "sister:tell":{
+    title:"妹妹｜告訴他",
+
+    phrases:[
+      "我想你",
+      "我很好",
+      "我不舒服",
+      "想跟你說話",
+      "其他"
+    ]
+  },
+
+
+  /* ---------- 奕仔 ---------- */
+
+  "yizi:ask":{
+    title:"奕仔｜問問題",
+
+    phrases:[
+      "什麼時候來",
+      "可以幫我嗎",
+      "其他"
+    ]
+  },
+
+
+  "yizi:tell":{
+    title:"奕仔｜告訴他",
+
+    phrases:[
+      "我想你",
+      "我很好",
+      "我不舒服",
+      "其他"
+    ]
+  },
+
+
+  /* ---------- 德翰 ---------- */
+
+  "dehan:ask":{
+    title:"德翰｜問問題",
+
+    phrases:[
+      "什麼時候來",
+      "可以幫我嗎",
+      "其他"
+    ]
+  },
+
+
+  "dehan:tell":{
+    title:"德翰｜告訴他",
+
+    phrases:[
+      "我想你",
+      "我很好",
+      "我不舒服",
+      "其他"
+    ]
+  },
+
+
+  /* ---------- 豆豆 ---------- */
+
+  "doudou:ask":{
+    title:"豆豆｜問問題",
+
+    phrases:[
+      "過來",
+      "陪我一下",
+      "其他"
+    ]
+  },
+
+
+  "doudou:tell":{
+    title:"豆豆｜告訴他",
+
+    phrases:[
+      "我想你",
+      "乖乖",
+      "其他"
+    ]
+  },
+
+
+  /* =====================================================
+     醫院
+  ===================================================== */
+
+  "hospital:questions":{
+    title:"醫院｜問問題",
+
+    phrases:[
+      "還要住幾天？",
+      "什麼時候可以回家？",
+      "什麼時候可以吃東西？",
+      "什麼時候可以喝水？",
+      "什麼時候可以下床？",
+      "為什麼要做這個？",
+      "什麼時候可以拔掉？",
+      "我現在可以說話嗎？",
+      "可以叫家人來嗎？"
+    ]
+  },
+
+
+  "hospital:room":{
+    title:"醫院｜病房",
+
+    phrases:[
+      "一般病房",
+      "加護病房",
+      "什麼時候可以換病房？"
+    ]
+  },
+
+
+  "hospital:tubes":{
+    title:"醫院｜身上的東西",
+
+    phrases:[
+      "呼吸管",
+      "點滴",
+      "尿管",
+      "監測器",
+      "鼻胃管"
+    ]
+  },
+
+
+  /* =====================================================
+     我
+  ===================================================== */
+
+  "me:body":{
+    title:"我｜身體不舒服",
+
+    phrases:[
+      "頭",
+      "眼睛",
+      "耳朵",
+      "鼻子",
+      "嘴巴",
+      "喉嚨",
+      "胸口",
+      "肚子",
+      "手",
+      "腳",
+      "冷",
+      "熱",
+      "痛",
+      "癢",
+      "頭暈",
+      "想吐"
+    ]
+  },
+
+
+  "me:help":{
+    title:"我｜需要幫忙",
+
+    phrases:[
+      "想喝水",
+      "想吃東西",
+      "想上廁所",
+      "想睡覺",
+      "想坐起來",
+      "想躺下",
+      "想有人陪",
+      "想叫家人"
+    ]
+  },
+
+
+  "me:mood":{
+    title:"我｜心情",
+
+    phrases:[
+      "😊 開心",
+      "😌 還好",
+      "😟 擔心",
+      "😢 難過",
+      "😣 不舒服"
+    ]
+  },
+
+
+  /* =====================================================
+     自由組句
+  ===================================================== */
+
+  "compose:who":{
+    title:"組合｜誰",
+
+    phrases:[
+      "我",
+      "你",
+      "他",
+      "醫生",
+      "護理師"
+    ]
+  },
+
+
+  "compose:thought":{
+    title:"組合｜想法",
+
+    phrases:[
+      "想",
+      "不要",
+      "需要",
+      "可以",
+      "不能"
+    ]
+  },
+
+
+  "compose:action":{
+    title:"組合｜事情",
+
+    phrases:[
+      "問",
+      "說",
+      "吃",
+      "喝",
+      "睡",
+      "休息"
+    ]
+  },
+
+
+  "compose:content":{
+    title:"組合｜內容",
+
+    phrases:[
+      "身體不舒服",
+      "痛",
+      "冷",
+      "熱",
+      "擔心",
+      "想回家",
+      "其他"
+    ]
+  }
+
+};
+
+
+/* =========================================================
+   HTML 防護
+========================================================= */
+
+function escapeHTML(s){
+
+  return s.replace(
+    /[&<>"']/g,
+
+    m => ({
+      "&":"&amp;",
+      "<":"&lt;",
+      ">":"&gt;",
+      '"':"&quot;",
+      "'":"&#39;"
+    }[m])
+  );
+
+}
+
+
+/* =========================================================
+   頁面渲染
+========================================================= */
+
+function render(pageKey,push=true){
+
+  if(push && currentPage!==pageKey){
+    pageStack.push(currentPage);
+  }
+
+  currentPage=pageKey;
+
+  const content=document.getElementById("content");
+
+
+  /* ---------- 手寫 ---------- */
+
+  if(pageKey==="handwriting"){
+
+    content.innerHTML=`
+
+      <div class="page active">
+
         <div class="topbar">
 
-            <button
-                class="back-btn"
-                onclick="showHome()">
-                ← 返回
-            </button>
+          <button onclick="goBack()">
+            ← 返回
+          </button>
 
-            <div class="page-title">
-                ${title}
-            </div>
+          <div class="page-title">
+            手寫
+          </div>
 
         </div>
+
+
+        <div class="handwriting-wrap">
+
+          <p class="note">
+            直接用手指在白色區域寫字
+          </p>
+
+          <canvas
+            id="handwritingCanvas"
+            width="800"
+            height="600">
+          </canvas>
+
+
+          <div class="handwriting-buttons">
+
+            <button onclick="clearHandwriting()">
+              🗑️ 清除
+            </button>
+
+          </div>
+
+        </div>
+
+      </div>
     `;
-}
 
 
-/* -------------------------
-   首頁
-------------------------- */
+    handwritingInitialized=false;
 
-function showHome() {
+    setTimeout(initHandwriting,50);
 
-    currentPage = "home";
-
-    app.innerHTML = `
-
-        <div class="home-title">
-            請選擇
-        </div>
-
-        <div class="buttons">
-
-            <button
-                class="option home-btn"
-                onclick="showFamily()">
-                🏠 家裡
-            </button>
-
-            <button
-                class="option hospital-btn"
-                onclick="showHospital()">
-                🏥 醫院
-            </button>
-
-            <button
-                class="option me-btn"
-                onclick="showMe()">
-                🙋 我
-            </button>
-
-        </div>
-    `;
-}
+    return;
+  }
 
 
-/* -------------------------
-   家裡
-------------------------- */
+  let data=pages[pageKey] || lists[pageKey];
 
-function showFamily() {
 
-    currentPage = "family";
+  /* ---------- 單一詞語 ---------- */
 
-    app.innerHTML = `
+  if(!data){
 
-        ${topbar("家裡")}
+    const [type,phrase]=pageKey.split(":");
 
-        <div class="buttons">
+    if(type==="phrase"){
 
-            <button
-                class="option"
-                onclick="showMessage('小焐')">
-                小焐
-            </button>
+      addPhrase(phrase);
 
-            <button
-                class="option"
-                onclick="showMessage('妹妹')">
-                妹妹
-            </button>
+      return;
+    }
+  }
 
-            <button
-                class="option"
-                onclick="showMessage('奕仔')">
-                奕仔
-            </button>
 
-            <button
-                class="option"
-                onclick="showMessage('德翰')">
-                德翰
-            </button>
+  let html=`
+
+    <div class="page active">
+
+      ${
+        pageKey!=="home"
+
+        ?
+
+        `
+        <div class="topbar">
+
+          <button onclick="goBack()">
+            ← 返回
+          </button>
+
+          <div class="page-title">
+            ${escapeHTML(data.title)}
+          </div>
 
         </div>
-    `;
-}
+        `
 
+        :
 
-/* -------------------------
-   醫院
-------------------------- */
+        `
+        <div class="topbar">
 
-function showHospital() {
-
-    currentPage = "hospital";
-
-    app.innerHTML = `
-
-        ${topbar("醫院")}
-
-        <div class="buttons">
-
-            <button
-                class="option"
-                onclick="showMessage('還要住幾天')">
-                還要住幾天
-            </button>
-
-            <button
-                class="option"
-                onclick="showMessage('問護理師問題')">
-                問護理師問題
-            </button>
+          <div class="page-title">
+            媽媽溝通程式
+          </div>
 
         </div>
-    `;
-}
+        `
+      }
+
+      <div class="grid">
+  `;
 
 
-/* -------------------------
-   我
-------------------------- */
+  /* ---------- 分類卡片 ---------- */
 
-function showMe() {
+  if(data.cards){
 
-    currentPage = "me";
+    data.cards.forEach(([label,target])=>{
 
-    app.innerHTML = `
+      html+=`
 
-        ${topbar("我")}
+        <button
+          class="card"
+          onclick="handleTarget('${target}')">
 
-        <div class="buttons">
+          ${escapeHTML(label)}
 
-            <button
-                class="option"
-                onclick="showMessage('身體不舒服')">
-                身體不舒服
-            </button>
+        </button>
 
-            <button
-                class="option"
-                onclick="showMessage('需要換墊子')">
-                需要換墊子
-            </button>
+      `;
 
-            <button
-                class="option"
-                onclick="showMessage('想躺起來')">
-                想躺起來
-            </button>
+    });
 
-        </div>
-    `;
-}
+  }
 
 
-/* -------------------------
-   顯示媽媽想說的話
-------------------------- */
+  /* ---------- 詞語 ---------- */
 
-function showMessage(text) {
+  else if(data.phrases){
 
-    const from = currentPage;
+    html=`
 
-    app.innerHTML = `
+      <div class="page active">
 
         <div class="topbar">
 
-            <button
-                class="back-btn"
-                onclick="goBack('${from}')">
-                ← 返回
-            </button>
+          <button onclick="goBack()">
+            ← 返回
+          </button>
 
-            <div class="page-title">
-                我想說
-            </div>
+          <div class="page-title">
+            ${escapeHTML(data.title)}
+          </div>
 
         </div>
 
-        <div class="message-box">
-
-            <div class="message">
-                ${text}
-            </div>
-
-            <button
-                class="option speak-btn"
-                onclick="speak(${JSON.stringify(text)})">
-                🔊 唸出來
-            </button>
-
-        </div>
+        <div>
     `;
+
+
+    data.phrases.forEach(p=>{
+
+      html+=`
+
+        <button
+          class="phrase"
+          onclick='addPhrase(${JSON.stringify(p)})'>
+
+          ${escapeHTML(p)}
+
+        </button>
+
+      `;
+
+    });
+
+
+    html+=`
+
+        </div>
+
+      </div>
+    `;
+  }
+
+
+  html+=`
+
+      </div>
+
+    </div>
+  `;
+
+
+  content.innerHTML=html;
+
 }
 
 
-/* -------------------------
-   返回
-------------------------- */
+/* =========================================================
+   點擊分類
+========================================================= */
 
-function goBack(page) {
+function handleTarget(target){
 
-    if (page === "family") {
+  if(target==="handwriting"){
 
-        showFamily();
+    render("handwriting");
 
-    } else if (page === "hospital") {
+    return;
+  }
 
-        showHospital();
 
-    } else if (page === "me") {
+  if(target.startsWith("phrase:")){
 
-        showMe();
+    addPhrase(target.slice(7));
 
-    } else {
+    return;
+  }
 
-        showHome();
 
-    }
+  render(target);
+
 }
 
 
-/* -------------------------
-   中文語音
-------------------------- */
+/* =========================================================
+   加入句子
+========================================================= */
 
-function speak(text) {
+function addPhrase(text){
 
-    if (!("speechSynthesis" in window)) {
+  if(
+    text===undefined ||
+    text===null ||
+    text===""
+  ){
 
-        alert("這台手機不支援語音功能");
+    return;
+  }
 
-        return;
-    }
 
-    speechSynthesis.cancel();
+  selected.push(String(text));
 
-    const utterance =
-        new SpeechSynthesisUtterance(text);
+  updateSentence();
 
-    utterance.lang = "zh-TW";
-
-    utterance.rate = 0.85;
-
-    utterance.pitch = 1;
-
-    speechSynthesis.speak(utterance);
 }
 
 
-/* -------------------------
-   啟動
-------------------------- */
+/* =========================================================
+   更新上方句子
+========================================================= */
 
-showHome();
+function updateSentence(){
+
+  const el=document.getElementById("sentenceText");
+
+  if(!el)return;
+
+
+  if(selected.length){
+
+    el.textContent=selected.join(" ");
+
+  }
+
+  else{
+
+    el.textContent="🗣️ 目前還沒有選擇";
+
+  }
+
+
+  el.scrollTop=el.scrollHeight;
+
+}
+
+
+/* =========================================================
+   上一步
+========================================================= */
+
+function undo(){
+
+  if(selected.length){
+
+    selected.pop();
+
+  }
+
+  updateSentence();
+
+}
+
+
+/* =========================================================
+   清除
+========================================================= */
+
+function clearSentence(){
+
+  selected=[];
+
+  updateSentence();
+
+}
+
+
+/* =========================================================
+   語音
+========================================================= */
+
+function speakSentence(){
+
+  if(!selected.length)return;
+
+  speechSynthesis.cancel();
+
+
+  const u=new SpeechSynthesisUtterance(
+    selected.join(" ")
+  );
+
+
+  u.lang="zh-TW";
+
+  u.rate=0.85;
+
+  speechSynthesis.speak(u);
+
+}
+
+
+/* =========================================================
+   返回上一層
+========================================================= */
+
+function goBack(){
+
+  const prev=pageStack.pop();
+
+
+  if(prev){
+
+    render(prev,false);
+
+  }
+
+  else{
+
+    render("home",false);
+
+  }
+
+}
+
+
+/* =========================================================
+   手寫功能
+========================================================= */
+
+let handwritingCanvas=null;
+let handwritingCtx=null;
+let isDrawing=false;
+let handwritingInitialized=false;
+
+
+/* ---------- 初始化 ---------- */
+
+function initHandwriting(){
+
+  handwritingCanvas=
+    document.getElementById("handwritingCanvas");
+
+
+  if(!handwritingCanvas)return;
+
+
+  if(handwritingInitialized)return;
+
+
+  handwritingInitialized=true;
+
+
+  handwritingCtx=
+    handwritingCanvas.getContext("2d");
+
+
+  handwritingCtx.lineCap="round";
+
+  handwritingCtx.lineJoin="round";
+
+
+  /* 滑鼠 */
+
+  handwritingCanvas.addEventListener(
+    "mousedown",
+    startDrawing
+  );
+
+  handwritingCanvas.addEventListener(
+    "mousemove",
+    draw
+  );
+
+  handwritingCanvas.addEventListener(
+    "mouseup",
+    stopDrawing
+  );
+
+  handwritingCanvas.addEventListener(
+    "mouseout",
+    stopDrawing
+  );
+
+
+  /* 手機 */
+
+  handwritingCanvas.addEventListener(
+    "touchstart",
+    startDrawing,
+    {passive:false}
+  );
+
+  handwritingCanvas.addEventListener(
+    "touchmove",
+    draw,
+    {passive:false}
+  );
+
+  handwritingCanvas.addEventListener(
+    "touchend",
+    stopDrawing
+  );
+
+}
+
+
+/* ---------- 取得觸控位置 ---------- */
+
+function getPos(e){
+
+  const rect=
+    handwritingCanvas.getBoundingClientRect();
+
+
+  const clientX=e.touches
+    ? e.touches[0].clientX
+    : e.clientX;
+
+
+  const clientY=e.touches
+    ? e.touches[0].clientY
+    : e.clientY;
+
+
+  return{
+
+    x:
+      (clientX-rect.left)
+      *
+      (
+        handwritingCanvas.width/
+        rect.width
+      ),
+
+    y:
+      (clientY-rect.top)
+      *
+      (
+        handwritingCanvas.height/
+        rect.height
+      )
+
+  };
+
+}
+
+
+/* ---------- 開始畫 ---------- */
+
+function startDrawing(e){
+
+  e.preventDefault();
+
+  isDrawing=true;
+
+
+  handwritingCtx.beginPath();
+
+
+  const pos=getPos(e);
+
+
+  handwritingCtx.moveTo(
+    pos.x,
+    pos.y
+  );
+
+
+  handwritingCtx.strokeStyle="#000000";
+
+  handwritingCtx.lineWidth=6;
+
+}
+
+
+/* ---------- 畫線 ---------- */
+
+function draw(e){
+
+  if(!isDrawing)return;
+
+
+  e.preventDefault();
+
+
+  const pos=getPos(e);
+
+
+  handwritingCtx.lineTo(
+    pos.x,
+    pos.y
+  );
+
+
+  handwritingCtx.stroke();
+
+}
+
+
+/* ---------- 結束 ---------- */
+
+function stopDrawing(){
+
+  isDrawing=false;
+
+
+  if(handwritingCtx){
+
+    handwritingCtx.closePath();
+
+  }
+
+}
+
+
+/* ---------- 清除手寫 ---------- */
+
+function clearHandwriting(){
+
+  if(
+    !handwritingCanvas ||
+    !handwritingCtx
+  ){
+
+    return;
+  }
+
+
+  handwritingCtx.clearRect(
+    0,
+    0,
+    handwritingCanvas.width,
+    handwritingCanvas.height
+  );
+
+}
+
+
+/* =========================================================
+   啟動程式
+========================================================= */
+
+render("home",false);
 
 </script>
 

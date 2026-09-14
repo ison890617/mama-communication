@@ -1,0 +1,1737 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>媽媽溝通程式</title>
+<style>
+:root{
+  --teal-deep:#173f37;
+  --teal:#1f5a4d;
+  --teal-light:#e8f3f0;
+  --cream:#faf6ee;
+  --card-border:#ddd3bd;
+  --ink:#26241f;
+  --danger:#c1352b;
+  --danger-bg:#fdeceb;
+  --ok:#1f7a4d;
+  --ok-bg:#e9f7ee;
+  --radius-lg:20px;
+  --radius-md:16px;
+  --radius-sm:12px;
+  --shadow:0 3px 10px rgba(30,25,15,.08);
+}
+
+*{box-sizing:border-box}
+
+html,body{
+  margin:0;
+  width:100%;
+  height:100%;
+  overflow:hidden;
+  font-family:-apple-system,BlinkMacSystemFont,"Noto Sans TC","Microsoft JhengHei",sans-serif;
+  background:var(--cream);
+  color:var(--ink);
+  -webkit-text-size-adjust:100%
+}
+
+button{
+  font:inherit;
+  touch-action:manipulation;
+  -webkit-tap-highlight-color:transparent;
+  cursor:pointer;
+  transition:transform .08s ease, background-color .12s ease, box-shadow .12s ease;
+}
+
+button:active{
+  transform:scale(.95);
+}
+
+#app{
+  height:100dvh;
+  display:flex;
+  flex-direction:column;
+  max-width:900px;
+  margin:auto
+}
+
+/* 上方：目前組成的句子 + 即時回答 */
+#top{
+  flex:none;
+  background:var(--teal-deep);
+  color:white;
+  padding:12px 14px 10px
+}
+
+#sentence{
+  background:var(--teal);
+  border-radius:var(--radius-md);
+  padding:10px 16px;
+  min-height:56px;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.06)
+}
+
+#sentence small{
+  display:block;
+  font-size:15px;
+  opacity:.85;
+  font-weight:700;
+  letter-spacing:.02em
+}
+
+#sentenceText{
+  font-size:28px;
+  font-weight:800;
+  line-height:1.25;
+  min-height:30px;
+  word-break:break-word;
+  margin-top:2px
+}
+
+#quick{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:8px;
+  margin-top:10px
+}
+
+.quick{
+  border:0;
+  border-radius:var(--radius-md);
+  background:white;
+  color:var(--ink);
+  min-height:66px;
+  font-size:22px;
+  font-weight:900;
+  box-shadow:var(--shadow);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:2px;
+  line-height:1.2;
+  padding:4px 2px
+}
+
+.quick .emoji{
+  font-size:26px;
+  margin-right:0;
+  line-height:1
+}
+
+.quick[data-instant="對"]{
+  background:var(--ok-bg);
+  color:var(--ok)
+}
+
+.quick[data-instant="不是／不會"]{
+  background:#fff7e8;
+  color:#8a5b00
+}
+
+.quick[data-instant="叫護理師"]{
+  background:var(--danger);
+  color:white
+}
+
+/* 上一步／清除 */
+#tools{
+  flex:none;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+  padding:10px 14px;
+  background:#f0e9da;
+  border-bottom:2px solid var(--card-border)
+}
+
+.tool{
+  border:2px solid var(--card-border);
+  border-radius:var(--radius-md);
+  min-height:54px;
+  background:white;
+  font-size:22px;
+  font-weight:900;
+  box-shadow:var(--shadow)
+}
+
+/* 主畫面 */
+#main{
+  flex:1;
+  min-height:0;
+  padding:12px 14px;
+  overflow:hidden
+}
+
+.screen{
+  height:100%;
+  display:none;
+  flex-direction:column;
+  min-height:0
+}
+
+.screen.active{
+  display:flex
+}
+
+.title{
+  text-align:center;
+  font-size:30px;
+  font-weight:900;
+  margin:2px 0 12px
+}
+
+.homeGrid{
+  flex:1;
+  min-height:0;
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  grid-template-rows:repeat(3,1fr);
+  gap:10px
+}
+
+.cardHome{
+  border:2px solid var(--card-border);
+  border-radius:var(--radius-lg);
+  background:white;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  font-size:26px;
+  font-weight:900;
+  box-shadow:var(--shadow)
+}
+
+.cardHome .emoji{
+  font-size:44px;
+  line-height:1
+}
+
+/* 次頁上方：返回鈕 + 標題 */
+.subtop{
+  display:flex;
+  gap:10px;
+  align-items:center;
+  margin-bottom:12px;
+  flex:none
+}
+
+.back{
+  border:2px solid var(--teal-deep);
+  border-radius:var(--radius-md);
+  background:white;
+  color:var(--teal-deep);
+  padding:10px 16px;
+  font-size:20px;
+  font-weight:900;
+  white-space:nowrap;
+  box-shadow:var(--shadow)
+}
+
+.subtop h2{
+  margin:0;
+  font-size:27px;
+  line-height:1.25;
+  font-weight:900
+}
+
+/* 分層第一層（家人／我／醫院 大分類） */
+.categoryGrid{
+  flex:1;
+  min-height:0;
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:12px
+}
+
+.category{
+  border:2px solid var(--card-border);
+  border-radius:var(--radius-lg);
+  background:white;
+  font-size:26px;
+  font-weight:900;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  box-shadow:var(--shadow);
+  padding:8px
+}
+
+.category .emoji{
+  font-size:38px
+}
+
+/* 第二層選項（實際可選的句子） */
+.grid{
+  flex:1;
+  min-height:0;
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  grid-auto-rows:minmax(96px,1fr);
+  gap:10px;
+  overflow-y:auto;
+  align-content:start;
+  padding-bottom:4px
+}
+
+.item{
+  border:2px solid var(--card-border);
+  border-radius:var(--radius-md);
+  background:white;
+  font-size:22px;
+  font-weight:800;
+  line-height:1.25;
+  padding:10px 8px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:5px;
+  box-shadow:var(--shadow);
+  text-align:center
+}
+
+.item .emoji{
+  font-size:30px;
+  line-height:1
+}
+
+/* 家人：選對象 */
+.personGrid{
+  flex:1;
+  min-height:0;
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  grid-template-rows:repeat(3,1fr);
+  gap:10px
+}
+
+.person{
+  border:2px solid var(--card-border);
+  border-radius:var(--radius-lg);
+  background:white;
+  font-size:26px;
+  font-weight:900;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  box-shadow:var(--shadow)
+}
+
+/* 自己組句子 */
+.composeWrap{
+  display:flex;
+  flex-direction:column;
+  min-height:0;
+  flex:1;
+  overflow-y:auto
+}
+
+.composeGrid{
+  flex:1;
+  min-height:0;
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  grid-auto-rows:minmax(120px,1fr);
+  gap:10px
+}
+
+.composeCat{
+  min-height:0;
+  border:2px solid var(--card-border);
+  border-radius:var(--radius-md);
+  background:white;
+  padding:8px;
+  box-shadow:var(--shadow);
+  display:flex;
+  flex-direction:column
+}
+
+.composeCat h3{
+  font-size:19px;
+  margin:0 0 6px;
+  text-align:center;
+  line-height:1.15;
+  font-weight:900;
+  color:var(--teal-deep)
+}
+
+.composeItems{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:6px;
+  flex:1
+}
+
+.composeItems button{
+  border:2px solid var(--card-border);
+  border-radius:10px;
+  background:var(--teal-light);
+  color:var(--ink);
+  min-height:44px;
+  font-size:18px;
+  font-weight:800;
+  padding:4px
+}
+
+.composeCat:nth-child(5){
+  grid-column:1 / -1
+}
+
+.composeCat:nth-child(5) .composeItems{
+  grid-template-columns:repeat(4,1fr)
+}
+
+/* 手寫 */
+#handScreen{
+  flex:1;
+  min-height:0;
+  display:flex;
+  flex-direction:column;
+  position:relative
+}
+
+#canvasWrap{
+  flex:1;
+  min-height:0;
+  background:white;
+  border:2px solid #b9b0a0;
+  border-radius:var(--radius-lg);
+  overflow:hidden;
+  box-shadow:var(--shadow)
+}
+
+canvas{
+  width:100%;
+  height:100%;
+  display:block;
+  touch-action:none
+}
+
+.handClear{
+  position:absolute;
+  right:0;
+  top:-2px;
+  z-index:2;
+  border:2px solid var(--teal-deep);
+  border-radius:var(--radius-sm);
+  background:white;
+  color:var(--teal-deep);
+  padding:8px 14px;
+  font-size:19px;
+  font-weight:900;
+  box-shadow:var(--shadow)
+}
+
+.handTitle{
+  margin-right:110px
+}
+
+/* 小螢幕（高度較矮的手機） */
+@media(max-height:700px){
+
+ #top{padding:8px 12px 8px}
+
+ #sentence{
+   min-height:46px;
+   padding:6px 12px
+ }
+
+ #sentence small{
+   font-size:12px
+ }
+
+ #sentenceText{
+   font-size:22px;
+   min-height:24px
+ }
+
+ #quick{margin-top:7px}
+
+ .quick{
+   min-height:54px;
+   font-size:19px
+ }
+
+ .quick .emoji{
+   font-size:22px
+ }
+
+ #tools{padding:7px 12px}
+
+ .tool{
+   min-height:46px;
+   font-size:19px
+ }
+
+ #main{
+   padding:8px 12px
+ }
+
+ .title{
+   font-size:25px;
+   margin-bottom:8px
+ }
+
+ .cardHome{
+   font-size:22px
+ }
+
+ .cardHome .emoji{
+   font-size:36px
+ }
+
+ .back{
+   font-size:18px;
+   padding:8px 12px
+ }
+
+ .subtop h2{
+   font-size:23px
+ }
+
+ .category{
+   font-size:22px
+ }
+
+ .category .emoji{
+   font-size:32px
+ }
+
+ .item{
+   font-size:19px
+ }
+
+ .item .emoji{
+   font-size:26px
+ }
+
+ .grid{
+   grid-auto-rows:minmax(78px,1fr)
+ }
+
+ .person{
+   font-size:21px
+ }
+
+ .composeCat h3{
+   font-size:16px
+ }
+
+ .composeItems button{
+   font-size:15px;
+   min-height:38px
+ }
+
+ .handClear{
+   font-size:16px;
+   padding:6px 10px
+ }
+}
+
+/* 很窄的手機 */
+@media(max-width:390px){
+
+ .quick{
+   font-size:17px
+ }
+
+ .quick .emoji{
+   font-size:20px
+ }
+
+ .cardHome{
+   font-size:20px
+ }
+
+ .category{
+   font-size:20px
+ }
+
+ .item{
+   font-size:18px
+ }
+
+ .person{
+   font-size:19px
+ }
+
+ .composeItems button{
+   font-size:14px
+ }
+}
+</style>
+</head>
+
+<body>
+
+<div id="app">
+
+<header id="top">
+
+  <div id="sentence">
+    <small>媽媽想說的是</small>
+    <div id="sentenceText">請點選下面的選項</div>
+  </div>
+
+  <!-- 即時回答 -->
+  <div id="quick">
+
+    <button class="quick" data-instant="對">
+      <span class="emoji">✅</span>對
+    </button>
+
+    <button class="quick" data-instant="不是／不會">
+      <span class="emoji">❌</span>不是／不會
+    </button>
+
+    <button class="quick" data-instant="叫護理師">
+      <span class="emoji">👩‍⚕️</span>叫護理師
+    </button>
+
+  </div>
+
+</header>
+
+<!-- 只保留上一步／清除 -->
+<div id="tools">
+
+  <button class="tool" id="undo">
+    ↩️ 上一步
+  </button>
+
+  <button class="tool" id="clear">
+    🗑️ 清除
+  </button>
+
+</div>
+
+<main id="main">
+
+<!-- ================= 首頁 ================= -->
+
+<section class="screen active" id="home">
+
+  <h1 class="title">
+    媽媽想說什麼？
+  </h1>
+
+  <div class="homeGrid">
+
+    <button class="cardHome" data-go="family">
+      <span class="emoji">👨‍👩‍👧‍👦</span>
+      家人
+    </button>
+
+    <button class="cardHome" data-go="me">
+      <span class="emoji">🙋‍♀️</span>
+      我
+    </button>
+
+    <button class="cardHome" data-go="hospital">
+      <span class="emoji">🏥</span>
+      醫院
+    </button>
+
+    <button class="cardHome" data-go="compose">
+      <span class="emoji">💬</span>
+      自己組句子
+    </button>
+
+    <button class="cardHome" data-go="hand">
+      <span class="emoji">✍️</span>
+      手寫
+    </button>
+
+  </div>
+
+</section>
+
+
+<!-- ================= 家人第一層 ================= -->
+
+<section class="screen" id="family">
+
+  <div class="subtop">
+
+    <button class="back">
+      ← 返回首頁
+    </button>
+
+    <h2>
+      家人｜想對誰說
+    </h2>
+
+  </div>
+
+  <div class="personGrid">
+
+    <button class="person" data-person="小焐">
+      👦 小焐
+    </button>
+
+    <button class="person" data-person="妹妹">
+      👧 妹妹
+    </button>
+
+    <button class="person" data-person="奕仔">
+      👨 奕仔
+    </button>
+
+    <button class="person" data-person="德翰">
+      👨 德翰
+    </button>
+
+    <button class="person" data-person="其他家人">
+      👨‍👩‍👧 其他家人
+    </button>
+
+  </div>
+
+</section>
+
+
+<!-- ================= 家人第二層 ================= -->
+
+<section class="screen" id="familyPhrases">
+
+  <div class="subtop">
+
+    <button class="back">
+      ← 返回首頁
+    </button>
+
+    <h2 id="familyTitle">
+      家人
+    </h2>
+
+  </div>
+
+  <div class="grid" id="familyGrid"></div>
+
+</section>
+
+
+<!-- ================= 我第一層 ================= -->
+
+<section class="screen" id="me">
+
+  <div class="subtop">
+
+    <button class="back">
+      ← 返回首頁
+    </button>
+
+    <h2>
+      我
+    </h2>
+
+  </div>
+
+  <div class="categoryGrid">
+
+    <button class="category" data-me-cat="body">
+      <span class="emoji">🤕</span>
+      身體不舒服
+    </button>
+
+    <button class="category" data-me-cat="mood">
+      <span class="emoji">💭</span>
+      心情
+    </button>
+
+    <button class="category" data-me-cat="help">
+      <span class="emoji">🙋‍♀️</span>
+      需要幫忙
+    </button>
+
+    <button class="category" data-me-cat="want">
+      <span class="emoji">❤️</span>
+      想做的事
+    </button>
+
+  </div>
+
+</section>
+
+
+<!-- ================= 我第二層 ================= -->
+
+<section class="screen" id="meOptions">
+
+  <div class="subtop">
+
+    <button class="back">
+      ← 返回首頁
+    </button>
+
+    <h2 id="meTitle">
+      我
+    </h2>
+
+  </div>
+
+  <div class="grid" id="meGrid"></div>
+
+</section>
+
+
+<!-- ================= 醫院第一層 ================= -->
+
+<section class="screen" id="hospital">
+
+  <div class="subtop">
+
+    <button class="back">
+      ← 返回首頁
+    </button>
+
+    <h2>
+      醫院
+    </h2>
+
+  </div>
+
+  <div class="categoryGrid">
+
+    <button class="category" data-hospital-cat="ask">
+      <span class="emoji">❓</span>
+      想問
+    </button>
+
+    <button class="category" data-hospital-cat="room">
+      <span class="emoji">🛏️</span>
+      病房
+    </button>
+
+    <button class="category" data-hospital-cat="things">
+      <span class="emoji">🩺</span>
+      身上的東西
+    </button>
+
+  </div>
+
+</section>
+
+
+<!-- ================= 醫院第二層 ================= -->
+
+<section class="screen" id="hospitalOptions">
+
+  <div class="subtop">
+
+    <button class="back">
+      ← 返回首頁
+    </button>
+
+    <h2 id="hospitalTitle">
+      醫院
+    </h2>
+
+  </div>
+
+  <div class="grid" id="hospitalGrid"></div>
+
+</section>
+
+
+<!-- ================= 自己組句子 ================= -->
+
+<section class="screen" id="compose">
+
+  <div class="subtop">
+
+    <button class="back">
+      ← 返回首頁
+    </button>
+
+    <h2>
+      自己組句子
+    </h2>
+
+  </div>
+
+  <div class="composeWrap">
+
+    <div class="composeGrid">
+
+
+      <!-- 誰 -->
+
+      <div class="composeCat">
+
+        <h3>
+          👤 誰
+        </h3>
+
+        <div class="composeItems">
+
+          <button data-add="我">我</button>
+          <button data-add="你">你</button>
+          <button data-add="他">他</button>
+          <button data-add="妹妹">妹妹</button>
+          <button data-add="奕仔">奕仔</button>
+          <button data-add="德翰">德翰</button>
+          <button data-add="小焐">小焐</button>
+          <button data-add="醫生">醫生</button>
+          <button data-add="護理師">護理師</button>
+
+        </div>
+
+      </div>
+
+
+      <!-- 疑問 -->
+
+      <div class="composeCat">
+
+        <h3>
+          ❓ 疑問
+        </h3>
+
+        <div class="composeItems">
+
+          <button data-add="什麼">什麼</button>
+          <button data-add="為什麼">為什麼</button>
+          <button data-add="哪裡">哪裡</button>
+          <button data-add="什麼時候">什麼時候</button>
+
+        </div>
+
+      </div>
+
+
+      <!-- 想法 -->
+
+      <div class="composeCat">
+
+        <h3>
+          💭 想法
+        </h3>
+
+        <div class="composeItems">
+
+          <button data-add="想">想</button>
+          <button data-add="不要">不要</button>
+          <button data-add="可以">可以</button>
+          <button data-add="不能">不能</button>
+          <button data-add="好">好</button>
+          <button data-add="很">很</button>
+
+        </div>
+
+      </div>
+
+
+      <!-- 動作 -->
+
+      <div class="composeCat">
+
+        <h3>
+          🗣️ 動作
+        </h3>
+
+        <div class="composeItems">
+
+          <button data-add="說">說</button>
+          <button data-add="看">看</button>
+          <button data-add="休息">休息</button>
+          <button data-add="聽">聽</button>
+
+        </div>
+
+      </div>
+
+
+      <!-- 內容 -->
+
+      <div class="composeCat">
+
+        <h3>
+          📦 內容
+        </h3>
+
+        <div class="composeItems">
+
+          <button data-add="水">水</button>
+          <button data-add="東西">東西</button>
+          <button data-add="身體不舒服">身體不舒服</button>
+          <button data-add="擔心">擔心</button>
+          <button data-add="痛">痛</button>
+          <button data-add="回家">回家</button>
+          <button data-add="其他">其他</button>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</section>
+
+
+<!-- ================= 手寫 ================= -->
+
+<section class="screen" id="hand">
+
+  <div class="subtop">
+
+    <button class="back">
+      ← 返回首頁
+    </button>
+
+    <h2 class="handTitle">
+      ✍️ 手寫
+    </h2>
+
+  </div>
+
+  <div id="handScreen">
+
+    <button class="handClear" id="erase">
+      🗑️ 清除畫布
+    </button>
+
+    <div id="canvasWrap">
+
+      <canvas id="canvas"></canvas>
+
+    </div>
+
+  </div>
+
+</section>
+
+</main>
+</div>
+
+
+<script>
+
+/* ================= 畫面切換 ================= */
+
+const screens=document.querySelectorAll(".screen");
+
+function show(id){
+
+  screens.forEach(s=>{
+    s.classList.toggle(
+      "active",
+      s.id===id
+    );
+  });
+
+  if(id==="hand"){
+    setTimeout(
+      resizeCanvas,
+      30
+    );
+  }
+
+}
+
+
+/* ================= 組句子 ================= */
+
+const sentence=[];
+
+const text=
+  document.getElementById(
+    "sentenceText"
+  );
+
+
+function render(){
+
+  text.textContent=
+    sentence.length
+      ? sentence.join(" ")
+      : "請點選下面的選項";
+
+}
+
+
+function add(v){
+
+  if(!v)return;
+
+  sentence.push(v);
+
+  render();
+
+}
+
+
+/* ================= 即時回答 ================= */
+
+/*
+  對／不是／不會／叫護理師
+
+  這三個按鈕：
+  1. 點選會發出聲音
+  2. 不加入組句子的 sentence
+  3. 不會重複堆積
+  4. 不改變上方正在組的句子
+*/
+
+function instant(v){
+
+  speechSynthesis.cancel();
+
+  const u=
+    new SpeechSynthesisUtterance(v);
+
+  u.lang="zh-TW";
+
+  u.rate=0.85;
+
+  speechSynthesis.speak(u);
+
+}
+
+
+/* ================= 一般按鈕 ================= */
+
+document
+  .querySelectorAll("[data-add]")
+  .forEach(btn=>{
+
+    btn.addEventListener(
+      "click",
+      ()=>{
+        add(btn.dataset.add);
+      }
+    );
+
+  });
+
+
+/* ================= 即時回答按鈕 ================= */
+
+document
+  .querySelectorAll("[data-instant]")
+  .forEach(btn=>{
+
+    btn.addEventListener(
+      "click",
+      ()=>{
+        instant(
+          btn.dataset.instant
+        );
+      }
+    );
+
+  });
+
+
+/* ================= 首頁 ================= */
+
+document
+  .querySelectorAll("[data-go]")
+  .forEach(btn=>{
+
+    btn.addEventListener(
+      "click",
+      ()=>{
+        show(btn.dataset.go);
+      }
+    );
+
+  });
+
+
+/* ================= 家人 ================= */
+
+document
+  .querySelectorAll("[data-person]")
+  .forEach(btn=>{
+
+    btn.addEventListener(
+      "click",
+      ()=>{
+        openFamily(
+          btn.dataset.person
+        );
+      }
+    );
+
+  });
+
+
+/* ================= 我第一層 ================= */
+
+document
+  .querySelectorAll("[data-me-cat]")
+  .forEach(btn=>{
+
+    btn.addEventListener(
+      "click",
+      ()=>{
+        openMe(
+          btn.dataset.meCat
+        );
+      }
+    );
+
+  });
+
+
+/* ================= 醫院第一層 ================= */
+
+document
+  .querySelectorAll("[data-hospital-cat]")
+  .forEach(btn=>{
+
+    btn.addEventListener(
+      "click",
+      ()=>{
+        openHospital(
+          btn.dataset.hospitalCat
+        );
+      }
+    );
+
+  });
+
+
+/* ================= 返回首頁 ================= */
+
+document
+  .querySelectorAll(".back")
+  .forEach(btn=>{
+
+    btn.addEventListener(
+      "click",
+      ()=>{
+        show("home");
+      }
+    );
+
+  });
+
+
+/* ================= 上一步 ================= */
+
+document.getElementById(
+  "undo"
+).onclick=()=>{
+
+  sentence.pop();
+
+  render();
+
+};
+
+
+/* ================= 清除 ================= */
+
+document.getElementById(
+  "clear"
+).onclick=()=>{
+
+  sentence.length=0;
+
+  render();
+
+};
+
+
+/* ================= 家人資料 ================= */
+
+const family={
+
+  "小焐":[
+    ["我想你","❤️"],
+    ["妹妹學校的事","🏫"],
+    ["最近好嗎","😊"],
+    ["想聽你聊天","👂"]
+  ],
+
+  "妹妹":[
+    ["我想你","❤️"],
+    ["最近好嗎","😊"],
+    ["什麼時候來","📅"]
+  ],
+
+  "奕仔":[
+    ["我想你","❤️"],
+    ["妹妹學校的事","🏫"],
+    ["最近好嗎","😊"],
+    ["想聽你聊天","👂"]
+  ],
+
+  "德翰":[
+    ["我想你","❤️"],
+    ["最近好嗎","😊"],
+    ["想聽你聊天","👂"]
+  ],
+
+  "其他家人":[
+    ["最近好嗎","😊"]
+  ]
+
+};
+
+
+function openFamily(name){
+
+  document.getElementById(
+    "familyTitle"
+  ).textContent=name;
+
+  const g=
+    document.getElementById(
+      "familyGrid"
+    );
+
+  g.innerHTML="";
+
+  family[name].forEach(
+    ([v,ic])=>{
+
+      const b=
+        document.createElement(
+          "button"
+        );
+
+      b.className="item";
+
+      b.dataset.add=v;
+
+      b.innerHTML=
+        '<span class="emoji">'+
+        ic+
+        "</span>"+
+        v;
+
+      b.addEventListener(
+        "click",
+        ()=>{
+          add(v);
+        }
+      );
+
+      g.appendChild(b);
+
+    }
+  );
+
+  show("familyPhrases");
+
+}
+
+
+/* ================= 我 ================= */
+
+const meData={
+
+  body:{
+    title:"身體不舒服",
+
+    items:[
+      ["頭","🤕"],
+      ["嘴巴","👄"],
+      ["手／腳","🖐️"],
+      ["很冷","🥶"],
+      ["很熱","🥵"],
+      ["喘不過氣","😮‍💨"]
+    ]
+  },
+
+  mood:{
+    title:"心情",
+
+    items:[
+      ["開心","😊"],
+      ["還好","🙂"],
+      ["擔心","😟"],
+      ["難過","😢"],
+      ["不舒服","😣"]
+    ]
+  },
+
+  help:{
+    title:"需要幫忙",
+
+    items:[
+      ["想換墊子","🛏️"],
+      ["想坐起來","🪑"],
+      ["想休息","😴"]
+    ]
+  },
+
+  want:{
+    title:"想做的事",
+
+    items:[
+      ["想聽歌","🎵"],
+      ["想牽著手","🤝"],
+      ["想聽節目","📺"]
+    ]
+  }
+
+};
+
+
+function openMe(key){
+
+  const data=
+    meData[key];
+
+  document.getElementById(
+    "meTitle"
+  ).textContent=data.title;
+
+  const g=
+    document.getElementById(
+      "meGrid"
+    );
+
+  g.innerHTML="";
+
+  data.items.forEach(
+    ([v,ic])=>{
+
+      const b=
+        document.createElement(
+          "button"
+        );
+
+      b.className="item";
+
+      b.dataset.add=v;
+
+      b.innerHTML=
+        '<span class="emoji">'+
+        ic+
+        "</span>"+
+        v;
+
+      b.addEventListener(
+        "click",
+        ()=>{
+          add(v);
+        }
+      );
+
+      g.appendChild(b);
+
+    }
+  );
+
+  show("meOptions");
+
+}
+
+
+/* ================= 醫院 ================= */
+
+const hospitalData={
+
+  ask:{
+    title:"想問",
+
+    items:[
+      [
+        "什麼時候可以回家？",
+        "🏠"
+      ],
+      [
+        "還要住幾天？",
+        "📅"
+      ],
+      [
+        "什麼時候可以吃東西？",
+        "🍚"
+      ],
+      [
+        "什麼時候可以拔掉？",
+        "❓"
+      ],
+      [
+        "可以叫家人來嗎？",
+        "👨‍👩‍👧‍👦"
+      ]
+    ]
+  },
+
+  room:{
+    title:"病房",
+
+    items:[
+      [
+        "什麼時候可以回一般病房？",
+        "🛏️"
+      ]
+    ]
+  },
+
+  things:{
+    title:"身上的東西",
+
+    items:[
+      [
+        "呼吸管 → 什麼時候可以拔掉？",
+        "😮‍💨"
+      ],
+      [
+        "鼻胃管 → 什麼時候可以拔掉？",
+        "🩺"
+      ],
+      [
+        "引流管 → 什麼時候可以拔掉？",
+        "🩹"
+      ]
+    ]
+  }
+
+};
+
+
+function openHospital(key){
+
+  const data=
+    hospitalData[key];
+
+  document.getElementById(
+    "hospitalTitle"
+  ).textContent=data.title;
+
+  const g=
+    document.getElementById(
+      "hospitalGrid"
+    );
+
+  g.innerHTML="";
+
+  data.items.forEach(
+    ([v,ic])=>{
+
+      const b=
+        document.createElement(
+          "button"
+        );
+
+      b.className="item";
+
+      b.dataset.add=v;
+
+      b.innerHTML=
+        '<span class="emoji">'+
+        ic+
+        "</span>"+
+        v;
+
+      b.addEventListener(
+        "click",
+        ()=>{
+          add(v);
+        }
+      );
+
+      g.appendChild(b);
+
+    }
+  );
+
+  show("hospitalOptions");
+
+}
+
+
+/* ================= 手寫 ================= */
+
+const c=
+  document.getElementById(
+    "canvas"
+  );
+
+const ctx=
+  c.getContext("2d");
+
+
+function resizeCanvas(){
+
+  const r=
+    c.getBoundingClientRect();
+
+  const d=
+    window.devicePixelRatio || 1;
+
+  if(!r.width || !r.height)
+    return;
+
+  c.width=
+    Math.round(r.width*d);
+
+  c.height=
+    Math.round(r.height*d);
+
+  ctx.setTransform(
+    d,0,0,d,0,0
+  );
+
+  ctx.lineWidth=6;
+
+  ctx.lineCap="round";
+
+  ctx.lineJoin="round";
+
+  ctx.strokeStyle="#222";
+
+}
+
+
+let drawing=false;
+
+let last={
+  x:0,
+  y:0
+};
+
+
+function pos(e){
+
+  const r=
+    c.getBoundingClientRect();
+
+  const t=
+    e.touches
+      ? e.touches[0]
+      : e;
+
+  return{
+    x:t.clientX-r.left,
+    y:t.clientY-r.top
+  };
+
+}
+
+
+function start(e){
+
+  drawing=true;
+
+  last=pos(e);
+
+  e.preventDefault();
+
+}
+
+
+function move(e){
+
+  if(!drawing)
+    return;
+
+  const p=pos(e);
+
+  ctx.beginPath();
+
+  ctx.moveTo(
+    last.x,
+    last.y
+  );
+
+  ctx.lineTo(
+    p.x,
+    p.y
+  );
+
+  ctx.stroke();
+
+  last=p;
+
+  e.preventDefault();
+
+}
+
+
+c.addEventListener(
+  "mousedown",
+  start
+);
+
+c.addEventListener(
+  "mousemove",
+  move
+);
+
+window.addEventListener(
+  "mouseup",
+  ()=>{
+    drawing=false;
+  }
+);
+
+
+c.addEventListener(
+  "touchstart",
+  start,
+  {passive:false}
+);
+
+c.addEventListener(
+  "touchmove",
+  move,
+  {passive:false}
+);
+
+c.addEventListener(
+  "touchend",
+  ()=>{
+    drawing=false;
+  }
+);
+
+
+/* 清除手寫畫布 */
+
+document.getElementById(
+  "erase"
+).onclick=()=>{
+
+  ctx.clearRect(
+    0,
+    0,
+    c.width,
+    c.height
+  );
+
+};
+
+
+window.addEventListener(
+  "resize",
+  ()=>{
+
+    if(
+      document
+        .getElementById("hand")
+        .classList
+        .contains("active")
+    ){
+
+      resizeCanvas();
+
+    }
+
+  }
+);
+
+
+/* 初始文字 */
+
+render();
+
+</script>
+
+</body>
+</html>

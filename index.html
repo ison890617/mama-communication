@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+<title>媽媽溝通</title>
+
+<style>
+* {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+    margin: 0;
+    min-height: 100%;
+    font-family: -apple-system, BlinkMacSystemFont, "Noto Sans TC",
+                 "Microsoft JhengHei", sans-serif;
+    background: #f5f5f5;
+    color: #222;
+}
+
+body {
+    min-height: 100vh;
+}
+
+.app {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* 最上方標題 */
+header {
+    height: 72px;
+    background: #ffffff;
+    border-bottom: 1px solid #ddd;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    font-weight: 700;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.screen {
+    flex: 1;
+    padding: 18px 16px 28px;
+    display: flex;
+    flex-direction: column;
+}
+
+/* 上方返回列 */
+.topbar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 22px;
+    min-height: 68px;
+}
+
+/* 返回按鈕 */
+.back-btn {
+    width: 135px;
+    min-height: 66px;
+    border: none;
+    border-radius: 18px;
+    background: #dedede;
+    box-shadow: 0 2px 7px rgba(0,0,0,0.12);
+    font-size: 25px;
+    font-weight: 700;
+    touch-action: manipulation;
+}
+
+/* 頁面標題 */
+.page-title {
+    flex: 1;
+    text-align: center;
+    font-size: 28px;
+    font-weight: 700;
+    margin-right: 135px;
+}
+
+.home-title {
+    text-align: center;
+    font-size: 28px;
+    font-weight: 700;
+    margin: 10px 0 28px;
+}
+
+.buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+/* 大按鈕 */
+button.option {
+    width: 100%;
+    min-height: 105px;
+    border: none;
+    border-radius: 22px;
+    background: #ffffff;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.12);
+    font-size: 31px;
+    font-weight: 700;
+    color: #222;
+    cursor: pointer;
+    touch-action: manipulation;
+}
+
+button:active {
+    transform: scale(0.97);
+    filter: brightness(0.96);
+}
+
+/* 首頁三個分類 */
+.home-btn {
+    background: #fff3d6 !important;
+}
+
+.hospital-btn {
+    background: #e3f2ff !important;
+}
+
+.me-btn {
+    background: #e8f7e8 !important;
+}
+
+/* 顯示句子 */
+.message-box {
+    margin: 20px auto;
+    width: 100%;
+    max-width: 600px;
+    background: #ffffff;
+    border-radius: 22px;
+    padding: 32px 20px;
+    text-align: center;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.12);
+}
+
+.message {
+    font-size: 40px;
+    font-weight: 700;
+    line-height: 1.5;
+}
+
+/* 語音按鈕 */
+.speak-btn {
+    margin-top: 25px !important;
+    background: #222222 !important;
+    color: #ffffff !important;
+}
+
+@media (max-width: 430px) {
+
+    header {
+        height: 64px;
+        font-size: 25px;
+    }
+
+    .screen {
+        padding: 16px 14px 24px;
+    }
+
+    .topbar {
+        gap: 8px;
+        margin-bottom: 18px;
+    }
+
+    .back-btn {
+        width: 125px;
+        min-height: 62px;
+        font-size: 23px;
+    }
+
+    .page-title {
+        font-size: 25px;
+        margin-right: 125px;
+    }
+
+    button.option {
+        min-height: 95px;
+        font-size: 29px;
+    }
+
+    .home-title {
+        font-size: 26px;
+    }
+
+    .message {
+        font-size: 36px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+    <header>
+        媽媽溝通
+    </header>
+
+    <main class="screen" id="app"></main>
+
+</div>
+
+<script>
+
+const app = document.getElementById("app");
+
+let currentPage = "home";
+
+
+/* -------------------------
+   上方返回列
+------------------------- */
+
+function topbar(title) {
+
+    return `
+        <div class="topbar">
+
+            <button
+                class="back-btn"
+                onclick="showHome()">
+                ← 返回
+            </button>
+
+            <div class="page-title">
+                ${title}
+            </div>
+
+        </div>
+    `;
+}
+
+
+/* -------------------------
+   首頁
+------------------------- */
+
+function showHome() {
+
+    currentPage = "home";
+
+    app.innerHTML = `
+
+        <div class="home-title">
+            請選擇
+        </div>
+
+        <div class="buttons">
+
+            <button
+                class="option home-btn"
+                onclick="showFamily()">
+                🏠 家裡
+            </button>
+
+            <button
+                class="option hospital-btn"
+                onclick="showHospital()">
+                🏥 醫院
+            </button>
+
+            <button
+                class="option me-btn"
+                onclick="showMe()">
+                🙋 我
+            </button>
+
+        </div>
+    `;
+}
+
+
+/* -------------------------
+   家裡
+------------------------- */
+
+function showFamily() {
+
+    currentPage = "family";
+
+    app.innerHTML = `
+
+        ${topbar("家裡")}
+
+        <div class="buttons">
+
+            <button
+                class="option"
+                onclick="showMessage('小焐')">
+                小焐
+            </button>
+
+            <button
+                class="option"
+                onclick="showMessage('妹妹')">
+                妹妹
+            </button>
+
+            <button
+                class="option"
+                onclick="showMessage('奕仔')">
+                奕仔
+            </button>
+
+            <button
+                class="option"
+                onclick="showMessage('德翰')">
+                德翰
+            </button>
+
+        </div>
+    `;
+}
+
+
+/* -------------------------
+   醫院
+------------------------- */
+
+function showHospital() {
+
+    currentPage = "hospital";
+
+    app.innerHTML = `
+
+        ${topbar("醫院")}
+
+        <div class="buttons">
+
+            <button
+                class="option"
+                onclick="showMessage('還要住幾天')">
+                還要住幾天
+            </button>
+
+            <button
+                class="option"
+                onclick="showMessage('問護理師問題')">
+                問護理師問題
+            </button>
+
+        </div>
+    `;
+}
+
+
+/* -------------------------
+   我
+------------------------- */
+
+function showMe() {
+
+    currentPage = "me";
+
+    app.innerHTML = `
+
+        ${topbar("我")}
+
+        <div class="buttons">
+
+            <button
+                class="option"
+                onclick="showMessage('身體不舒服')">
+                身體不舒服
+            </button>
+
+            <button
+                class="option"
+                onclick="showMessage('需要換墊子')">
+                需要換墊子
+            </button>
+
+            <button
+                class="option"
+                onclick="showMessage('想躺起來')">
+                想躺起來
+            </button>
+
+        </div>
+    `;
+}
+
+
+/* -------------------------
+   顯示媽媽想說的話
+------------------------- */
+
+function showMessage(text) {
+
+    const from = currentPage;
+
+    app.innerHTML = `
+
+        <div class="topbar">
+
+            <button
+                class="back-btn"
+                onclick="goBack('${from}')">
+                ← 返回
+            </button>
+
+            <div class="page-title">
+                我想說
+            </div>
+
+        </div>
+
+        <div class="message-box">
+
+            <div class="message">
+                ${text}
+            </div>
+
+            <button
+                class="option speak-btn"
+                onclick="speak(${JSON.stringify(text)})">
+                🔊 唸出來
+            </button>
+
+        </div>
+    `;
+}
+
+
+/* -------------------------
+   返回
+------------------------- */
+
+function goBack(page) {
+
+    if (page === "family") {
+
+        showFamily();
+
+    } else if (page === "hospital") {
+
+        showHospital();
+
+    } else if (page === "me") {
+
+        showMe();
+
+    } else {
+
+        showHome();
+
+    }
+}
+
+
+/* -------------------------
+   中文語音
+------------------------- */
+
+function speak(text) {
+
+    if (!("speechSynthesis" in window)) {
+
+        alert("這台手機不支援語音功能");
+
+        return;
+    }
+
+    speechSynthesis.cancel();
+
+    const utterance =
+        new SpeechSynthesisUtterance(text);
+
+    utterance.lang = "zh-TW";
+
+    utterance.rate = 0.85;
+
+    utterance.pitch = 1;
+
+    speechSynthesis.speak(utterance);
+}
+
+
+/* -------------------------
+   啟動
+------------------------- */
+
+showHome();
+
+</script>
+
+</body>
+</html>
